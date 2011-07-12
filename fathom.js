@@ -141,6 +141,26 @@ github.com/markdalgleish/fathom/blob/master/MIT-LICENSE.txt
 			}
 		},
 		
+		recording: (function() {
+			var t0, times = [];
+			function getSlideSelector(cx, slide) {
+				return ( slide.id && ( "#" + slide.id ) ) || $.inArray( slide, cx.$slides );
+			}
+			return function() {
+				var self = this;
+				if( t0 ) {
+					console.log( "timeline: " + JSON.stringify(times) )
+				} else {
+					self.$container.bind( "activateslide.fathom", function( jEv ) {
+						times.push({ time: Math.round(((new Date()).getTime() - t0)/1000), slide: getSlideSelector( self, jEv.target ) });
+					} );
+					times.push({ time: 0, slide: getSlideSelector( self, self.$activeSlide[0] ) });
+					t0 = (new Date()).getTime();
+					console.log( "recording started" );
+				}
+			};
+		})(),
+		
 		_detectPortable: function() {
 			if (this.config.portable === undefined) {
 				if (this.$container.parent().is('body')) {
@@ -170,6 +190,8 @@ github.com/markdalgleish/fathom/blob/master/MIT-LICENSE.txt
 				} else if ( key === 37) {
 					event.preventDefault();
 					self.prevSlide();
+				} else if ( key === 83 && event.shiftKey && event.altKey ) { // ( mac = option shift s )
+					self.recording();
 				}
 			});
 			
@@ -242,7 +264,7 @@ github.com/markdalgleish/fathom/blob/master/MIT-LICENSE.txt
 			var slides = this.$slides;
 					
 			function parseTime(point) {
-				for(var m = (point.time || point).toString().match(/(((\d+):)?(\d+):)?(\d+)/), a = 0, i = 3; i <= 5; i++) {
+				for(var m = (point.time == null ? point : point.time).toString().match(/(((\d+):)?(\d+):)?(\d+)/), a = 0, i = 3; i <= 5; i++) {
 					a = (a * 60) + parseInt(m[i] || 0);
 				}
 				return a;
